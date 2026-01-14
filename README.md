@@ -36,7 +36,7 @@ Liquid Air Energy Storage stores electrical energy by:
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/laes-model.git
+git clone https://github.com/Inigo-Antony/laes-model.git
 cd laes-model
 
 # Install dependencies
