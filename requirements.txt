@@ -1,0 +1,13 @@
+# LAES Model Dependencies
+# Install with: pip install -r requirements.txt
+
+# Core dependencies
+CoolProp>=6.4.0          # Thermodynamic properties
+numpy>=1.20.0            # Numerical computing
+matplotlib>=3.4.0        # Plotting
+
+# Optional development dependencies
+# pytest>=7.0.0          # Testing
+# black>=22.0.0          # Code formatting
+# flake8>=4.0.0          # Linting
+# mypy>=0.950            # Type checking
