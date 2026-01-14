@@ -122,10 +122,8 @@ print(f"LCOS: ${econ['lcos_per_MWh']:.0f}/MWh")
 ```
 laes-model/
 ├── README.md               # This file
-├── LICENSE                 # MIT License
 ├── requirements.txt        # Dependencies
 ├── setup.py                # Package installation
-├── pyproject.toml          # Modern packaging config
 ├── .gitignore              # Git ignore patterns
 │
 ├── laes/                   # Main package
@@ -225,62 +223,6 @@ pip install pytest-cov
 pytest tests/ --cov=laes --cov-report=html
 ```
 
-## 🌐 Hosting on GitHub
-
-### Step 1: Create a GitHub Repository
-
-1. Go to [github.com](https://github.com) and log in
-2. Click the **+** icon → **New repository**
-3. Name it `laes-model` (or your preferred name)
-4. Choose **Public** or **Private**
-5. **Don't** initialize with README (we already have one)
-6. Click **Create repository**
-
-### Step 2: Push Your Code
-
-```bash
-# Navigate to your project directory
-cd /path/to/your/laes-model
-
-# Initialize git (if not already done)
-git init
-
-# Add all files
-git add .
-
-# Create initial commit
-git commit -m "Initial commit: LAES thermodynamic and economic model"
-
-# Add your GitHub repository as remote
-git remote add origin https://github.com/YOUR_USERNAME/laes-model.git
-
-# Push to GitHub
-git branch -M main
-git push -u origin main
-```
-
-### Step 3: Add a Sample Plot (Optional)
-
-```bash
-# Create docs folder and generate a sample plot
-mkdir -p docs
-python -m laes --output docs/laes_simulation.png --quiet
-
-# Add and push
-git add docs/
-git commit -m "Add sample simulation plot"
-git push
-```
-
-### Step 4: Create a Release (Optional)
-
-1. Go to your repository on GitHub
-2. Click **Releases** → **Create a new release**
-3. Tag: `v1.0.0`
-4. Title: `LAES Model v1.0.0`
-5. Description: List features
-6. Click **Publish release**
-
 ## 📚 References
 
 1. Morgan, R., et al. (2015). "Liquid air energy storage – Analysis and first results from a pilot scale demonstration plant." *Applied Energy*, 137, 845-853.
@@ -310,15 +252,12 @@ Contributions are welcome! Here's how:
 - [ ] Add more detailed cost correlations
 - [ ] Implement waste heat integration scenarios
 
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 👤 Author
 
-**[Your Name]**
-- GitHub: [@your_username](https://github.com/your_username)
-- Email: your.email@example.com
+**Inigo Antony**
+- GitHub: [@Inigo-Antony](https://github.com/Inigo-Antony)
+- Email: inigoantony16@gmail.com
 
 ## 🙏 Acknowledgments
 
