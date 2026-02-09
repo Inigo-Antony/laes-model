@@ -5,7 +5,6 @@
 
 A first-principles thermodynamic and economic model for Liquid Air Energy Storage (LAES) systems.
 
-![LAES Simulation](docs/laes_simulation.png)
 
 ## 🔋 What is LAES?
 
@@ -188,7 +187,7 @@ Liquid Air → [Cryo Pump] → [Cold Recovery] → [Evaporator] → [Superheater
 ══════════════════════════════════════════════════════════════
  Without cold recycle: 26.1%
  With cold recycle:    28.4%
- Improvement:          +8.7%
+ Improvement:          +2.3%
 
 ══════════════════════════════════════════════════════════════
  SIMULATION RESULTS (48 hours)
@@ -266,6 +265,4 @@ Contributions are welcome! Here's how:
 
 ---
 
-<p align="center">
-  Made with ❄️ for the energy storage community
-</p>
+
