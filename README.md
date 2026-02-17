@@ -250,6 +250,8 @@ Contributions are welcome! Here's how:
 - [ ] Add more detailed cost correlations
 - [ ] Implement waste heat integration scenarios
 
+### License
+This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## 👤 Author
 
