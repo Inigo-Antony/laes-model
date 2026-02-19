@@ -1,63 +1,65 @@
-# LAES - Liquid Air Energy Storage Model
+# LAES — Liquid Air Energy Storage Model
 
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-A first-principles thermodynamic and economic model for Liquid Air Energy Storage (LAES) systems.
+A first-principles thermodynamic and economic model for Liquid Air Energy Storage (LAES) systems, built on CoolProp for accurate real-gas property calculations.
 
+---
 
-## 🔋 What is LAES?
+## What is LAES?
 
-Liquid Air Energy Storage stores electrical energy by:
-1. **Charging**: Liquefying air during off-peak hours (cheap electricity)
-2. **Storing**: Keeping liquid air in insulated tanks at -196°C
-3. **Discharging**: Expanding the liquid air through turbines during peak demand
+Liquid Air Energy Storage stores electricity by:
 
-### Key Advantages
-- ⏱️ **Long duration storage** (4-12+ hours)
-- 🌍 **No geographical constraints** (unlike pumped hydro)
-- 🔄 **No degradation** (unlike batteries)
-- 🏭 **Proven industrial components**
+1. **Charging** — liquefying air during off-peak hours using cheap electricity (~−196 °C)
+2. **Storing** — holding liquid air in insulated tanks at near-atmospheric pressure
+3. **Discharging** — expanding the liquid air through turbines during peak demand to regenerate electricity
 
-## ✨ Features
+Key advantages over other large-scale storage technologies:
 
-| Feature | Description |
-|---------|-------------|
-| ⚡ **Thermodynamics** | Claude cycle liquefaction, direct expansion power recovery |
-| 🔄 **Cold Recycle** | Thermal storage integration for improved efficiency |
-| 📊 **Transient Simulation** | Time-domain operation with configurable schedules |
-| 💰 **Economics** | CAPEX, OPEX, NPV, IRR, LCOS analysis |
-| 📈 **Visualization** | Auto-generated plots for analysis |
+- No geographical constraints (unlike pumped hydro)
+- No electrochemical degradation (unlike batteries) — 25–40 year system life
+- Uses proven industrial components (compressors, turbines, heat exchangers)
+- Volumetric energy density ~200 kWh/m³ — roughly 6× denser than compressed air storage
 
-## 🚀 Quick Start
+---
+
+## Model Features
+
+| Module | What it does |
+|--------|--------------|
+| `thermodynamics.py` | Claude cycle liquefaction + multi-stage direct expansion power recovery |
+| `storage.py` | Liquid air tank (boil-off) and thermal energy stores (HGCS/HGWS) |
+| `simulation.py` | Time-domain operation over configurable charge/discharge schedules |
+| `economics.py` | CAPEX, OPEX, NPV, payback, LCOS analysis |
+| `cli.py` | Command-line interface |
+
+---
+
+## Quick Start
 
 ### Installation
 
 ```bash
-# Clone the repository
 git clone https://github.com/Inigo-Antony/laes-model.git
 cd laes-model
-
-# Install dependencies
 pip install -r requirements.txt
-
-# Install package in development mode
 pip install -e .
 ```
 
-### Basic Usage
+### Command Line
 
 ```bash
-# Run with default settings (10 MW / 4-hour plant)
+# Default 10 MW / 4-hour plant
 python -m laes
 
-# Custom plant configuration
+# 50 MW / 6-hour plant
 python -m laes --power 50 --hours 6 --tank 1000
 
-# Different electricity prices
+# Different electricity price spread
 python -m laes --offpeak 20 --onpeak 150
 
-# 48-hour simulation showing cold recycle
+# 48-hour simulation with cold recycle
 python -m laes --schedule two_day
 ```
 
@@ -66,7 +68,7 @@ python -m laes --schedule two_day
 ```python
 from laes import PlantConfig, LAESSimulator, calculate_rte, calculate_economics
 
-# Create configuration
+# Configure plant
 config = PlantConfig(
     charge_power_MW=50,
     discharge_power_MW=50,
@@ -74,197 +76,184 @@ config = PlantConfig(
     tank_capacity_tonnes=1000,
 )
 
-# Calculate thermodynamic performance
-rte_result = calculate_rte(config, verbose=True)
-print(f"Round-trip efficiency: {rte_result['rte_with_cold']:.1%}")
+# Thermodynamic performance
+rte = calculate_rte(config, verbose=True)
+print(f"RTE (with cold recycle): {rte['rte_with_cold']:.1%}")
+print(f"Specific consumption:    {rte['liquefaction_with_cold']['specific_consumption_kWh_per_kg']:.3f} kWh/kg")
 
-# Run transient simulation
+# Transient simulation
 sim = LAESSimulator(config)
-schedule = [
-    ('discharge', 4),  # Morning peak
-    ('idle', 4),
-    ('charge', 8),     # Night charging
-    ('idle', 8),
-]
-results = sim.run(schedule, verbose=True)
-sim.plot_results('my_simulation.png')
+results = sim.run([('charge', 8), ('idle', 4), ('discharge', 6)], verbose=True)
+sim.plot_results('simulation.png')
 
 # Economic analysis
-econ = calculate_economics(config, rte=rte_result['rte_with_cold'], verbose=True)
-print(f"NPV: ${econ['npv']/1e6:.1f} million")
-print(f"LCOS: ${econ['lcos_per_MWh']:.0f}/MWh")
+econ = calculate_economics(config, rte=rte['rte_with_cold'], verbose=True)
+print(f"CAPEX: ${econ['capex_total']/1e6:.1f} M")
+print(f"LCOS:  ${econ['lcos_per_MWh']:.0f}/MWh")
 ```
 
-## 📖 Command Line Options
+---
+
+## Command Line Options
 
 | Option | Default | Description |
 |--------|---------|-------------|
 | `--power` | 10 | Plant power rating [MW] |
 | `--hours` | 4 | Storage duration [hours] |
-| `--tank` | 200 | Tank capacity [tonnes] |
+| `--tank` | 200 | Liquid air tank capacity [tonnes] |
 | `--offpeak` | 30 | Off-peak electricity price [$/MWh] |
 | `--onpeak` | 80 | On-peak electricity price [$/MWh] |
-| `--schedule` | two_day | Operating schedule |
-| `--output` | laes_simulation.png | Output plot filename |
-| `--no-plot` | - | Skip generating plots |
-| `--quiet` | - | Minimal output |
+| `--schedule` | two_day | Operating schedule (`default`, `two_day`, `peak_shaving`) |
+| `--output` | laes_simulation.png | Plot output filename |
+| `--no-plot` | — | Skip plot generation |
+| `--quiet` | — | Suppress detailed output |
 
-### Available Schedules
+---
 
-- `default` - 24-hour cycle (charge → discharge)
-- `two_day` - 48-hour cycle showing cold recycle
-- `peak_shaving` - Multiple short discharge periods
+## Cycle Overview
 
-## 📁 Project Structure
+### Liquefaction (Charge) — Claude Cycle
+
+```
+Air (25°C, 1 bar)
+  → [3-stage Compressor + Intercooling to 35°C]
+  → [HX1: pre-cooled by cold return stream*]
+  → [Cold-Store HX: further pre-cooled by HGCS cold (if available)]
+  → Flow split (bypass_fraction = 0.45):
+       bypass  → [Cryogenic Turbine] → cold exhaust → HX1 return
+       main    → [HX2] → [J-T valve] → [Phase Separator]
+                                              ↓           ↓
+                                        Liquid Air    Vapour → HX1 return
+                                        to Tank
+```
+
+*Cold return temperature is derived from a mass-enthalpy balance of the bypass exhaust and phase separator vapour — not a hardcoded assumption.
+
+### Power Recovery (Discharge) — Direct Expansion
+
+```
+Liquid Air (tank)
+  → [Cryogenic Pump: 1 → 70 bar]
+  → [Cold Recovery to HGCS* (pump outlet to 35°C)]
+  → [Evaporator + Superheater: to 250°C using stored compression heat]
+  → [4-stage Turbine with inter-stage reheat]
+  → Electricity
+```
+
+*Cold recovery upper bound is T_intercool (35°C) — the physically correct cutoff for cold that is useful to the liquefaction cycle.
+
+---
+
+## Model Performance (Default 10 MW / 4-hour Plant)
+
+| Metric | Model Value | Literature Range | Notes |
+|--------|-------------|-----------------|-------|
+| Liquid yield (no cold) | ~31% | 22–35% (Claude, 50 bar) | ✅ In range |
+| Liquid yield (with cold) | ~38% | 35–45% | ✅ In range |
+| Specific consumption SC (no cold) | ~0.38 kWh/kg | 0.35–0.45 kWh/kg | ✅ Commercial scale range |
+| Specific consumption SC (with cold) | ~0.34 kWh/kg | 0.30–0.40 kWh/kg | ✅ In range |
+| Specific power output SP | ~0.115 kWh/kg | 0.10–0.35 kWh/kg | ✅ 4-stage turbine |
+| RTE (no cold) | ~30% | — | Steady-state, no external heat |
+| RTE (with cold recycle) | ~33% | 45–62% (large, optimised) | See gap analysis below |
+| CAPEX (10 MW) | ~$24–28 M | $900–6,000/kW | ✅ Small-scale range |
+| LCOS | ~$400–500/MWh | $150–250/MWh (large) | Consequence of low RTE at small scale |
+
+### Why is the RTE lower than literature?
+
+Literature figures of 45–62% typically include:
+- **External heat sources** (waste heat from co-located LNG terminals, power stations, or industrial processes) raising turbine inlet temperature to 300–400 °C vs. 250 °C here
+- **Large-scale effects** (50–200 MW plants with optimised component selection)
+- **Hybrid configurations** (ORC integration, LNG cold recovery)
+
+This model represents a **stand-alone, self-contained 10 MW plant with no external heat/cold**. The Highview Power 5 MW pilot achieved **8% RTE** in early trials (Morgan et al. 2015). Their commercial 50 MW target is 50–60% RTE. At 10 MW stand-alone with stored compression heat only, 30–35% is physically plausible and consistent with the Sciacovelli et al. (2017) results for small-scale non-hybrid LAES.
+
+Increasing `T_superheat_C` to 300–350 °C (available with external waste heat) raises RTE to approximately 40–45%.
+
+---
+
+## Assumptions
+
+All modelling assumptions — every default value, hardcoded parameter, and simplification — are documented with physical justification and literature references in **[ASSUMPTIONS.md](ASSUMPTIONS.md)**.
+
+Key decisions worth noting:
+- Cold return temperature to HX1 is **physically derived** from a mass-enthalpy balance (bypass turbine exhaust + phase separator vapour), not assumed
+- Cold recovery upper bound is **T_intercool (35 °C)**, the physically correct cutoff
+- 4 turbine stages with inter-stage reheat (consistent with Highview Power pilot design)
+- No external heat or cold sources assumed — standalone worst case
+
+---
+
+## Project Structure
 
 ```
 laes-model/
 ├── README.md               # This file
-├── requirements.txt        # Dependencies
-├── setup.py                # Package installation
-├── .gitignore              # Git ignore patterns
+├── ASSUMPTIONS.md          # Full assumptions and justifications
+├── requirements.txt
+├── setup.py
 │
-├── laes/                   # Main package
-│   ├── __init__.py         # Public API
-│   ├── __main__.py         # CLI entry point
-│   ├── cli.py              # Command-line interface
-│   ├── config.py           # Configuration dataclass
-│   ├── thermodynamics.py   # Cycle calculations
-│   ├── storage.py          # Tank & thermal storage
-│   ├── simulation.py       # Transient simulator
-│   └── economics.py        # Financial analysis
+├── laes/
+│   ├── __init__.py
+│   ├── __main__.py
+│   ├── cli.py
+│   ├── config.py           # PlantConfig dataclass + constants
+│   ├── thermodynamics.py   # Liquefaction + discharge + RTE
+│   ├── storage.py          # Tank and thermal storage models
+│   ├── simulation.py       # Transient simulator + plots
+│   └── economics.py        # CAPEX, OPEX, NPV, LCOS
 │
-├── examples/               # Example scripts
+├── examples/
 │   └── example_usage.py
 │
-├── tests/                  # Unit tests
-│   ├── __init__.py
-│   └── test_laes.py
-│
-└── docs/                   # Documentation (optional)
-    └── laes_simulation.png
+└── tests/
+    └── test_laes.py
 ```
-
-## 🔬 Model Details
-
-### Liquefaction Cycle (Claude Cycle)
-
-```
-Air Inlet → [Compressor] → [Intercooler] → [Heat Exchanger] → [Cold HX]
-                                                                  ↓
-                                              ┌─────────────────────┤
-                                              ↓                     ↓
-                                         [Turbine]             [J-T Valve]
-                                              ↓                     ↓
-                                         Cold Gas              Liquid Air
-                                              ↓                     ↓
-                                          Recycle               Storage
-```
-
-### Power Recovery Cycle
-
-```
-Liquid Air → [Cryo Pump] → [Cold Recovery] → [Evaporator] → [Superheater]
-    ↑                           ↓                               ↓
-  Tank                    Cold Storage                     [Turbine]
-                                                               ↓
-                                                          Electricity
-```
-
-### Key Performance Metrics
-
-| Metric | Without Cold Recycle | With Cold Recycle |
-|--------|:-------------------:|:-----------------:|
-| Liquid Yield | ~30% | ~38% |
-| Specific Consumption | 0.40 kWh/kg | 0.35 kWh/kg |
-| Round-Trip Efficiency | 25-26% | 28-30% |
-
-## 📊 Example Output
-
-```
-══════════════════════════════════════════════════════════════
- ROUND-TRIP EFFICIENCY
-══════════════════════════════════════════════════════════════
- Without cold recycle: 26.1%
- With cold recycle:    28.4%
- Improvement:          +2.3%
-
-══════════════════════════════════════════════════════════════
- SIMULATION RESULTS (48 hours)
-══════════════════════════════════════════════════════════════
- Energy in:  160,000 kWh
- Energy out:  41,807 kWh
- Round-trip efficiency: 26.1%
-
-══════════════════════════════════════════════════════════════
- FINANCIAL METRICS
-══════════════════════════════════════════════════════════════
- CAPEX:   $24.1 million ($603/kWh)
- NPV:     $-25.1 million
- LCOS:    $769/MWh
-```
-
-## 🧪 Running Tests
-
-```bash
-# Install pytest
-pip install pytest
-
-# Run all tests
-pytest tests/ -v
-
-# Run specific test class
-pytest tests/test_laes.py::TestThermodynamics -v
-
-# Run with coverage
-pip install pytest-cov
-pytest tests/ --cov=laes --cov-report=html
-```
-
-## 📚 References
-
-1. Morgan, R., et al. (2015). "Liquid air energy storage – Analysis and first results from a pilot scale demonstration plant." *Applied Energy*, 137, 845-853.
-
-2. Highview Power. [Commercial LAES Systems](https://highviewpower.com/)
-
-3. Sciacovelli, A., et al. (2017). "Liquid air energy storage – Operation and performance of the first pilot plant in the world." *ECOS 2017*.
-
-4. Ameel, B., et al. (2013). "Thermodynamic analysis of energy storage with a liquid air Rankine cycle." *Applied Thermal Engineering*, 52(1), 130-140.
-
-## 🤝 Contributing
-
-Contributions are welcome! Here's how:
-
-1. **Fork** the repository
-2. **Create** a feature branch: `git checkout -b feature/amazing-feature`
-3. **Commit** your changes: `git commit -m 'Add amazing feature'`
-4. **Push** to the branch: `git push origin feature/amazing-feature`
-5. **Open** a Pull Request
-
-### Ideas for Contributions
-
-- [ ] Add more liquefaction cycles (Linde, Kapitza)
-- [ ] Implement part-load efficiency curves
-- [ ] Add optimization module for dispatch
-- [ ] Create interactive Jupyter notebooks
-- [ ] Add more detailed cost correlations
-- [ ] Implement waste heat integration scenarios
-
-### License
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 👤 Author
-
-**Inigo Antony**
-- GitHub: [@Inigo-Antony](https://github.com/Inigo-Antony)
-- Email: inigoantony16@gmail.com
-
-## 🙏 Acknowledgments
-
-- [CoolProp](http://www.coolprop.org/) for thermodynamic property calculations
-- [Highview Power](https://highviewpower.com/) for pioneering commercial LAES
-- The open-source community for Python scientific computing tools
 
 ---
 
+## Running Tests
 
+```bash
+pip install pytest
+pytest tests/ -v
+```
+
+---
+
+## Known Limitations
+
+1. **Steady-state only** — dynamic operation (thermocline effects, start-up/shutdown) can reduce effective RTE by 20–25% (Sciacovelli et al. 2017; Vecchi et al. 2020). The HGCS efficiency factor (0.85) partially accounts for this.
+2. **No part-load model** — all results are at 100% rated power.
+3. **Non-iterative cold box** — HX1 cold-return temperature uses a first-pass estimate; a rigorous pinch analysis would iterate to convergence. Planned for a future release.
+4. **No external heat/cold integration** — LNG cold recovery or industrial waste heat can double the RTE; modelling these is a known future extension.
+5. **CAPEX uncertainty ±30–50%** — parametric pre-FEED estimates only.
+
+See [ASSUMPTIONS.md §7](ASSUMPTIONS.md#7-limitations-and-known-simplifications) for full details.
+
+---
+
+## References
+
+1. Borri et al. (2021). A review on liquid air energy storage. *Renewable and Sustainable Energy Reviews* 137, 110572.
+2. Morgan et al. (2015). Liquid air energy storage — first results from a pilot scale plant. *Applied Energy* 137, 845–853.
+3. Tafone et al. (2019). New parametric performance maps for LAES. *Applied Energy* 250, 1641–1656.
+4. Guizzi et al. (2015). Thermodynamic analysis of a LAES system. *Energy* 93, 1639–1647.
+5. Sciacovelli et al. (2017). LAES operation and performance, first pilot plant. *Applied Energy* 194, 522–529.
+
+---
+
+## Author
+
+**Inigo Antony**  
+MSc Sustainable Energy Systems — University of Birmingham / IIT Madras  
+GitHub: [@Inigo-Antony](https://github.com/Inigo-Antony)  
+Email: inigoantony16@gmail.com
+
+## Acknowledgements
+
+- [CoolProp](http://www.coolprop.org/) for thermodynamic property calculations
+- [Highview Power](https://highviewpower.com/) for pioneering commercial LAES
+
+---
+
+*Licensed under the MIT License.*
